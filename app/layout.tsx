@@ -7,6 +7,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
+import { NotificationProvider } from '@/components/notifications/notification-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -51,13 +52,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <Toaster />
-            <SonnerToaster position="top-right" />
+            <NotificationProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster />
+              <SonnerToaster position="top-right" />
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -2,6 +2,29 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
+import type { User as NextAuthUser } from "next-auth";
+
+declare module "next-auth" {
+  interface User {
+    role?: string;
+    token?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    id?: string | null;
+  }
+  interface Session {
+    user: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      role?: string;
+      apiToken?: string;
+      id?: string | null;
+    }
+  }
+}
+
 const handler = NextAuth({
   providers: [
     GoogleProvider({
@@ -76,9 +99,9 @@ const handler = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.role = token.role;
-        session.user.apiToken = token.apiToken;
+      if (token && session.user) {
+        session.user.role = typeof token.role === "string" ? token.role : undefined;
+        session.user.apiToken = typeof token.apiToken === "string" ? token.apiToken : undefined;
       }
       return session;
     }

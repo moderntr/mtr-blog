@@ -83,7 +83,7 @@ app.use('*', (req, res) => {
 
 // MongoDB Connection
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce-blog', {
+  .connect(process.env.MONGODB_URI || 'mongodb+srv://mtr-blogs:mtr-blogs@cluster0.ndx0pux.mongodb.net/mtr-blogs?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
