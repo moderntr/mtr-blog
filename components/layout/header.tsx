@@ -62,7 +62,7 @@ export default function Header() {
               href="/"
               className="text-2xl font-bold tracking-tighter text-foreground"
             >
-              BlogCommerce
+              Modern Trade Market
             </Link>
           </div>
 

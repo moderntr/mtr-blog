@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 md:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">BlogCommerce</h3>
+            <h3 className="text-lg font-semibold mb-4">Modern Trade Market</h3>
             <p className="text-muted-foreground mb-4">
               Bringing you the latest trends, insights, and industry knowledge to
               help your business grow.
@@ -140,7 +140,7 @@ export default function Footer() {
         
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} BlogCommerce. All rights reserved.
+            &copy; {new Date().getFullYear()} Modern Trade Market. All rights reserved.
           </p>
           <div className="flex space-x-4 text-sm text-muted-foreground">
             <Link href="/privacy-policy" className="hover:text-foreground transition-colors">

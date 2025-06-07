@@ -1,24 +1,21 @@
+// app/admin/dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, 
-  ResponsiveContainer, XAxis, YAxis, CartesianGrid, 
-  Tooltip, Legend, Cell
+  LineChart, Line, BarChart, Bar, 
+  ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip 
 } from "recharts";
 import { 
-  Users, FileText, MessageSquare, Tag, BarChart2, PlusCircle,
-  Eye, ThumbsUp, BookOpen
+  FileText, MessageSquare, Users, Tags, PlusCircle 
 } from "lucide-react";
-import DashboardLayout from "@/components/dashboard/dashboard-layout";
+import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { postsAPI, usersAPI, commentsAPI, categoriesAPI } from "@/lib/api";
 
-// Temporary mock data
+// Mock data for charts
 const viewsData = [
   { name: "Jan", views: 4000 },
   { name: "Feb", views: 3000 },
@@ -39,303 +36,166 @@ const engagementData = [
   { name: "Jul", comments: 380, likes: 520 },
 ];
 
-const categoryData = [
-  { name: "Marketing", value: 400, color: "hsl(var(--chart-1))" },
-  { name: "E-Commerce", value: 300, color: "hsl(var(--chart-2))" },
-  { name: "Technology", value: 300, color: "hsl(var(--chart-3))" },
-  { name: "Business", value: 200, color: "hsl(var(--chart-4))" },
-  { name: "Design", value: 100, color: "hsl(var(--chart-5))" },
-];
-
-const recentPosts = [
-  {
-    id: "1",
-    title: "7 E-Commerce Trends That Will Define 2025",
-    author: "Sarah Johnson",
-    date: "2 days ago",
-    views: 1243,
-    comments: 18,
-    status: "published"
-  },
-  {
-    id: "2",
-    title: "How AI is Revolutionizing Customer Service in E-Commerce",
-    author: "Michael Chen",
-    date: "5 days ago",
-    views: 2105,
-    comments: 31,
-    status: "published"
-  },
-  {
-    id: "3",
-    title: "The Psychology of Color in E-Commerce Design",
-    author: "Emma Rodriguez",
-    date: "7 days ago",
-    views: 1876,
-    comments: 24,
-    status: "published"
-  },
-  {
-    id: "4",
-    title: "Creating an Effective E-Commerce Content Strategy",
-    author: "David Williams",
-    date: "1 day ago",
-    views: 856,
-    comments: 14,
-    status: "draft"
-  }
-];
-
 export default function AdminDashboard() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    posts: 0,
+    comments: 0,
+    users: 0,
+    categories: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.push('/login');
-      } else if (user.role !== 'admin') {
-        router.push('/');
-      } else {
-        setIsAuthorized(true);
-      }
-    }
-  }, [user, loading, router]);
+    const fetchStats = async () => {
+      try {
+        const [
+          postsRes, 
+          commentsRes, 
+          usersRes, 
+          categoriesRes
+        ] = await Promise.all([
+          postsAPI.getPosts({ limit: 1 }),
+          commentsAPI.getComments({ limit: 1 }),
+          usersAPI.getUsers({ limit: 1 }),
+          categoriesAPI.getCategories(),
+        ]);
 
-  if (loading || !isAuthorized) {
+        setStats({
+          posts: postsRes.data.pagination.total,
+          comments: commentsRes.data.pagination.total,
+          users: usersRes.data.pagination.total,
+          categories: categoriesRes.data.data.length,
+        });
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl">Loading...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Button asChild>
-          <Link href="/admin/posts/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Post
-          </Link>
-        </Button>
+        {user?.role === 'admin' || user?.role === 'writer' ? (
+          <Button asChild>
+            <Link href="/admin/posts/new">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Post
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          title="Total Posts" 
+          value={stats.posts} 
+          icon={FileText} 
+          change="+12% from last month" 
+        />
+        <StatCard 
+          title="Total Comments" 
+          value={stats.comments} 
+          icon={MessageSquare} 
+          change="+18% from last month" 
+        />
+        <StatCard 
+          title="Active Users" 
+          value={stats.users} 
+          icon={Users} 
+          change="+7% from last month" 
+        />
+        <StatCard 
+          title="Categories" 
+          value={stats.categories} 
+          icon={Tags} 
+          change="+0 from last month" 
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">Total Posts</p>
-                <h3 className="text-3xl font-bold mt-2">142</h3>
-              </div>
-              <div className="bg-primary/10 p-3 rounded-full">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <span className="text-green-500 font-medium">+12%</span> from last month
-            </div>
+          <CardHeader>
+            <CardTitle>Page Views</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={viewsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="views" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">Total Comments</p>
-                <h3 className="text-3xl font-bold mt-2">842</h3>
-              </div>
-              <div className="bg-primary/10 p-3 rounded-full">
-                <MessageSquare className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <span className="text-green-500 font-medium">+18%</span> from last month
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">Active Users</p>
-                <h3 className="text-3xl font-bold mt-2">2,487</h3>
-              </div>
-              <div className="bg-primary/10 p-3 rounded-full">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <span className="text-green-500 font-medium">+7%</span> from last month
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground">Categories</p>
-                <h3 className="text-3xl font-bold mt-2">18</h3>
-              </div>
-              <div className="bg-primary/10 p-3 rounded-full">
-                <Tag className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <div className="mt-4 text-xs text-muted-foreground">
-              <span className="text-muted">+0</span> from last month
-            </div>
+          <CardHeader>
+            <CardTitle>User Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={engagementData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="comments" fill="#82ca9d" />
+                <Bar dataKey="likes" fill="#ffc658" />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
 
-      <Tabs defaultValue="analytics">
-        <TabsList className="mb-6">
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Page Views</CardTitle>
-                <CardDescription>View trends over the last 7 months</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={viewsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="views" 
-                      stroke="hsl(var(--chart-1))" 
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>User Engagement</CardTitle>
-                <CardDescription>Comments and likes over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={engagementData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="comments" fill="hsl(var(--chart-2))" />
-                    <Bar dataKey="likes" fill="hsl(var(--chart-3))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  change,
+}: {
+  title: string;
+  value: number;
+  icon: any;
+  change: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <h3 className="text-2xl font-bold mt-1">{value}</h3>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Content by Category</CardTitle>
-              <CardDescription>Distribution of content across categories</CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <div className="w-full max-w-md">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="content">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Posts</CardTitle>
-              <CardDescription>
-                Recently published and draft posts
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentPosts.map((post) => (
-                  <div 
-                    key={post.id}
-                    className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="space-y-1 mb-3 md:mb-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium line-clamp-1">{post.title}</h4>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          post.status === 'published' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                        }`}>
-                          {post.status}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        by {post.author} • {post.date}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Eye className="h-4 w-4" />
-                        {post.views}
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MessageSquare className="h-4 w-4" />
-                        {post.comments}
-                      </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/admin/posts/${post.id}`}>
-                          <BookOpen className="mr-2 h-4 w-4" />
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6">
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/admin/posts">View All Posts</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </DashboardLayout>
+          <div className="bg-primary/10 p-3 rounded-full">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">{change}</p>
+      </CardContent>
+    </Card>
   );
 }

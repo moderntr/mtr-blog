@@ -4,6 +4,63 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Google Auth Endpoint
+router.post('/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { name, email, sub: googleId, picture } = payload;
+
+    // Find or create user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        googleId,
+        avatar: picture,
+        emailVerified: true,
+        role: 'user'
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Update existing user with Google ID
+      user.googleId = googleId;
+      user.avatar = picture;
+      await user.save();
+    }
+
+    // Generate JWT token
+    const jwtToken = user.getSignedJwtToken();
+
+    res.status(200).json({
+      success: true,
+      token: jwtToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar
+      }
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(500).json({ message: 'Google authentication failed' });
+  }
+});
 
 // @route   POST /api/auth/register
 // @desc    Register user

@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -150,21 +151,7 @@ export default function LoginPage() {
               </div>
 
               <div className="flex gap-2 mt-6">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  type="button"
-                  disabled={loading}
-                >
-                  <Image
-                    src="https://authjs.dev/img/providers/google.svg"
-                    alt="Google"
-                    width={16}
-                    height={16}
-                    className="mr-2"
-                  />
-                  Google
-                </Button>
+                <GoogleAuthButton />
                 <Button
                   variant="outline"
                   className="w-full"

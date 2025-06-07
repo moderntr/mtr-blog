@@ -21,15 +21,17 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   error: string | null;
+  googleAuth: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  login: async () => {},
-  register: async () => {},
+  login: async (_email: string, _password: string) => {},
+  register: async (_name: string, _email: string, _password: string) => {},
   logout: () => {},
   loading: false,
-  error: null
+  error: null,
+  googleAuth: async (_token: string) => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -137,13 +139,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/');
   };
 
+  const googleAuth = async (token: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Google authentication failed');
+      }
+
+      localStorage.setItem('user', JSON.stringify({
+        ...data.user,
+        token: data.token
+      }));
+      setUser(data.user);
+      
+      toast.success('Google login successful!');
+      router.push('/');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Google authentication failed';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const contextValue = {
     user,
     login,
     register,
     logout,
     loading,
-    error
+    error,
+    googleAuth
   };
 
   return (
