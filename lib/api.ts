@@ -1,5 +1,5 @@
 // @/lib/api/index.ts
-import axios from 'axios';
+import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -7,14 +7,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const user = localStorage.getItem('user');
+  if (typeof window !== "undefined") {
+    const user = localStorage.getItem("user");
     if (user) {
       const userData = JSON.parse(user);
       if (userData.token) {
@@ -28,24 +28,23 @@ api.interceptors.request.use((config) => {
 // Auth API
 export const authAPI = {
   login: (email: string, password: string) =>
-    api.post('/auth/login', { email, password }),
+    api.post("/auth/login", { email, password }),
 
   register: (name: string, email: string, password: string) =>
-    api.post('/auth/register', { name, email, password }),
+    api.post("/auth/register", { name, email, password }),
 
-  getMe: () => api.get('/auth/me'),
+  getMe: () => api.get("/auth/me"),
 
-  googleAuth: (userData: any) =>
-    api.post('/auth/google', userData),
+  googleAuth: (userData: any) => api.post("/auth/google", userData),
 };
 
 // Posts API
 export const postsAPI = {
-  getPosts: (params?: any) => api.get('/posts', { params }),
+  getPosts: (params?: any) => api.get("/posts", { params }),
 
   getPost: (idOrSlug: string) => api.get(`/posts/${idOrSlug}`),
 
-  createPost: (postData: any) => api.post('/posts', postData),
+  createPost: (postData: any) => api.post("/posts", postData),
 
   updatePost: (id: string, postData: any) => api.put(`/posts/${id}`, postData),
 
@@ -53,43 +52,42 @@ export const postsAPI = {
 
   toggleLikePost: (id: string) => api.post(`/posts/${id}/toggle-like`),
 
-  getFeaturedPosts: () => api.get('/posts/featured'),
+  getFeaturedPosts: () => api.get("/posts/featured"),
 };
 
 // Categories API
 export const categoriesAPI = {
-  getCategories: () => api.get('/categories'),
+  getCategories: () => api.get("/categories"),
 
   getCategory: (idOrSlug: string) => api.get(`/categories/${idOrSlug}`),
 
-  createCategory: (categoryData: any) => api.post('/categories', categoryData),
+  createCategory: (categoryData: any) => api.post("/categories", categoryData),
 
-  updateCategory: (id: string, categoryData: any) => api.put(`/categories/${id}`, categoryData),
+  updateCategory: (id: string, categoryData: any) =>
+    api.put(`/categories/${id}`, categoryData),
 
   deleteCategory: (id: string) => api.delete(`/categories/${id}`),
 };
 
-// ✅ Comments API (Fixed)
 export const commentsAPI = {
-  getComments: (params?: any) => api.get('/comments', { params }),
+  getComments: (params?: any) => api.get("/comments", { params }),
 
   getPostComments: (postId: string, params?: any) =>
     api.get(`/comments/post/${postId}`, { params }),
 
-  createComment: (commentData: any) => api.post('/comments', commentData),
+  createComment: (commentData: any) => api.post("/comments", commentData),
 
   likeComment: (id: string) => api.post(`/comments/${id}/like`),
 
   deleteComment: (id: string) => api.delete(`/comments/${id}`),
 
-  // ✅ Add this method
   updateCommentStatus: (commentId: string, status: string) =>
     api.patch(`/comments/${commentId}/status`, { status }),
 };
 
 // Users API
 export const usersAPI = {
-  getUsers: (params?: any) => api.get('/users', { params }),
+  getUsers: (params?: any) => api.get("/users", { params }),
 
   getUser: (id: string) => api.get(`/users/${id}`),
 

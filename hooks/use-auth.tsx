@@ -12,6 +12,14 @@ interface User {
   role: 'admin' | 'writer' | 'user';
   avatar?: string;
   token?: string;
+  bio?: string;
+  social?: {
+    twitter?: string;
+    facebook?: string;
+    linkedin?: string;
+    instagram?: string;
+    website?: string;
+  };
 }
 
 interface AuthContextType {
