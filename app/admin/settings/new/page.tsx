@@ -96,12 +96,9 @@ export default function NewPostPage() {
 
   const loadCategories = async () => {
     try {
-      console.log('Loading categories for post form...');
       const response = await categoriesAPI.getCategories();
-      console.log('Categories loaded:', response.data.data);
       setCategories(response.data.data);
     } catch (error) {
-      console.error('Error loading categories:', error);
       toast.error('Failed to load categories');
     }
   };
@@ -124,13 +121,10 @@ export default function NewPostPage() {
   const onSubmit = async (data: PostFormValues) => {
     setSubmitting(true);
     try {
-      console.log('Submitting new post:', data);
-      const response = await postsAPI.createPost(data);
-      console.log('Post created:', response.data.data);
+      await postsAPI.createPost(data);
       toast.success('Post created successfully!');
       router.push('/admin/posts');
     } catch (error: any) {
-      console.error('Error creating post:', error);
       const errorMessage = error.response?.data?.message || 'Failed to create post';
       toast.error(errorMessage);
     } finally {
@@ -139,8 +133,7 @@ export default function NewPostPage() {
   };
 
   const handlePreview = () => {
-    const formData = form.getValues();
-    console.log('Previewing post:', formData);
+    // In a real app, you might open a preview modal or new tab
     toast.info('Preview functionality would open here');
   };
 

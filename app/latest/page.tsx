@@ -23,7 +23,7 @@ export default function LatestPosts() {
         const response = await postsAPI.getPosts({
           sort: "-createdAt",     // matches backend logic
           page: 1,
-          limit: 4,               // just the latest 4
+          limit: 400,               // just the latest 4
           status: "published"     // optional, defaults in backend
         });
 
@@ -77,7 +77,7 @@ export default function LatestPosts() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-20 mx-14">
       {latestPosts.map((post) => (
         <Link 
           key={post._id || post.id} 

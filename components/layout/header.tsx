@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import Image from "next/image";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,7 +41,6 @@ export default function Header() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Categories", href: "/categories" },
     { name: "Latest", href: "/latest" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
@@ -62,7 +62,7 @@ export default function Header() {
               href="/"
               className="text-2xl font-bold tracking-tighter text-foreground"
             >
-              Modern Trade Market
+              <Image src="/logo.png" alt="Logo" width={120} height={120} className="inline-block mr-2" />
             </Link>
           </div>
 

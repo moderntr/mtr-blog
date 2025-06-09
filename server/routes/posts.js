@@ -3,7 +3,6 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const Post = require('../models/Post');
 const User = require('../models/User');
-const Category = require('../models/Category');
 
 // @route   GET /api/posts
 // @desc    Get all posts with pagination and filters
@@ -14,7 +13,7 @@ router.get('/', async (req, res) => {
       page = 1,
       limit = 10,
       sort = '-createdAt',
-      status = 'published',
+      status,
       category,
       tag,
       author,
@@ -22,35 +21,34 @@ router.get('/', async (req, res) => {
       featured
     } = req.query;
 
-    // Build filter object
-    const filter = { status };
+    // Initialize filter object
+    const filter = {};
 
-    // Add category filter if provided
+    // Add filters only if values are provided
+    if (status) {
+      filter.status = status;
+    }
+
     if (category) {
       filter.categories = category;
     }
 
-    // Add tag filter if provided
     if (tag) {
       filter.tags = tag;
     }
 
-    // Add author filter if provided
     if (author) {
       filter.author = author;
     }
 
-    // Add featured filter if provided
     if (featured === 'true') {
       filter.featured = true;
     }
 
-    // Add search filter if provided
     if (search) {
       filter.$text = { $search: search };
     }
 
-    // Get posts with pagination
     const posts = await Post.find(filter)
       .sort(sort)
       .skip((page - 1) * limit)
@@ -58,7 +56,6 @@ router.get('/', async (req, res) => {
       .populate('author', 'name avatar')
       .populate('categories', 'name slug');
 
-    // Get total count for pagination
     const total = await Post.countDocuments(filter);
 
     res.status(200).json({
@@ -294,10 +291,10 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// @route   POST /api/posts/:id/like
-// @desc    Like a post
+// @route   POST /api/posts/:id/toggle-like
+// @desc    Toggle like/unlike a post
 // @access  Private
-router.post('/:id/like', async (req, res) => {
+router.post('/:id/toggle-like', async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
@@ -305,65 +302,43 @@ router.post('/:id/like', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Check if post is already liked
-    if (post.likes.includes(req.auth.id)) {
-      return res.status(400).json({ message: 'Post already liked' });
+    const userId = req.auth.id;
+    const likedIndex = post.likes.findIndex(like => like.toString() === userId);
+
+    if (likedIndex !== -1) {
+      // User already liked -> unlike
+      post.likes.splice(likedIndex, 1);
+      await post.save();
+
+      await User.findByIdAndUpdate(userId, {
+        $pull: { likedPosts: post._id }
+      });
+
+      return res.status(200).json({
+        success: true,
+        action: 'unliked',
+        data: { likesCount: post.likes.length }
+      });
+    } else {
+      // User hasn't liked yet -> like
+      post.likes.push(userId);
+      await post.save();
+
+      await User.findByIdAndUpdate(userId, {
+        $push: { likedPosts: post._id }
+      });
+
+      return res.status(200).json({
+        success: true,
+        action: 'liked',
+        data: { likesCount: post.likes.length }
+      });
     }
-
-    // Add user to likes
-    post.likes.push(req.auth.id);
-    await post.save();
-
-    // Add post to user's liked posts
-    await User.findByIdAndUpdate(req.auth.id, {
-      $push: { likedPosts: post._id }
-    });
-
-    res.status(200).json({
-      success: true,
-      data: { likesCount: post.likes.length }
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
 });
 
-// @route   POST /api/posts/:id/unlike
-// @desc    Unlike a post
-// @access  Private
-router.post('/:id/unlike', async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-
-    // Check if post is not liked
-    if (!post.likes.includes(req.auth.id)) {
-      return res.status(400).json({ message: 'Post not liked yet' });
-    }
-
-    // Remove user from likes
-    post.likes = post.likes.filter(
-      like => like.toString() !== req.auth.id
-    );
-    await post.save();
-
-    // Remove post from user's liked posts
-    await User.findByIdAndUpdate(req.auth.id, {
-      $pull: { likedPosts: post._id }
-    });
-
-    res.status(200).json({
-      success: true,
-      data: { likesCount: post.likes.length }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
-  }
-});
 
 module.exports = router;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,13 +54,16 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-export default function NewPostPage() {
+export default function EditPostPage() {
+  const { id } = useParams();
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loadingPost, setLoadingPost] = useState(true);
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -90,9 +93,57 @@ export default function NewPostPage() {
       } else {
         setIsAuthorized(true);
         loadCategories();
+        
+        // If we have an ID, we're editing an existing post
+        if (id && id !== "new") {
+          setIsEditing(true);
+          loadPost(id as string);
+        } else {
+          setLoadingPost(false);
+        }
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, id]);
+
+  const loadPost = async (postId: string) => {
+    try {
+      console.log(`Loading post with ID: ${postId}`);
+      const response = await postsAPI.getPost(postId);
+      const post = response.data.data;
+      
+      console.log('Loaded post data:', post);
+      
+      // Check if current user is the author (for writers)
+      if (user?.role === 'writer' && post.author._id !== user.id) {
+        toast.error('You can only edit your own posts');
+        router.push('/admin/posts');
+        return;
+      }
+
+      // Set form values from the loaded post
+      form.reset({
+        title: post.title,
+        content: post.content,
+        excerpt: post.excerpt || "",
+        featuredImage: post.featuredImage || "",
+        categories: post.categories?.map((c: any) => c._id) || [],
+        tags: post.tags || [],
+        status: post.status,
+        featured: post.featured || false,
+        seo: {
+          metaTitle: post.seo?.metaTitle || "",
+          metaDescription: post.seo?.metaDescription || "",
+          keywords: post.seo?.keywords || [],
+        },
+      });
+      
+      setLoadingPost(false);
+    } catch (error) {
+      console.error('Error loading post:', error);
+      toast.error('Failed to load post');
+      router.push('/admin/posts');
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -124,14 +175,22 @@ export default function NewPostPage() {
   const onSubmit = async (data: PostFormValues) => {
     setSubmitting(true);
     try {
-      console.log('Submitting new post:', data);
-      const response = await postsAPI.createPost(data);
-      console.log('Post created:', response.data.data);
-      toast.success('Post created successfully!');
+      if (isEditing && id) {
+        console.log('Updating post:', data);
+        const response = await postsAPI.updatePost(id as string, data);
+        console.log('Post updated:', response.data.data);
+        toast.success('Post updated successfully!');
+      } else {
+        console.log('Creating new post:', data);
+        const response = await postsAPI.createPost(data);
+        console.log('Post created:', response.data.data);
+        toast.success('Post created successfully!');
+      }
       router.push('/admin/posts');
     } catch (error: any) {
-      console.error('Error creating post:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to create post';
+      console.error('Error saving post:', error);
+      const errorMessage = error.response?.data?.message || 
+        (isEditing ? 'Failed to update post' : 'Failed to create post');
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);
@@ -144,7 +203,7 @@ export default function NewPostPage() {
     toast.info('Preview functionality would open here');
   };
 
-  if (loading || !isAuthorized) {
+  if (loading || !isAuthorized || (isEditing && loadingPost)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-pulse text-xl">Loading...</div>
@@ -163,8 +222,12 @@ export default function NewPostPage() {
               </Link>
             </Button>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Create New Post</h1>
-              <p className="text-muted-foreground">Write and publish a new blog post</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {isEditing ? 'Edit Post' : 'Create New Post'}
+              </h1>
+              <p className="text-muted-foreground">
+                {isEditing ? 'Update your blog post' : 'Write and publish a new blog post'}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -184,7 +247,7 @@ export default function NewPostPage() {
                   <CardHeader>
                     <CardTitle>Post Content</CardTitle>
                     <CardDescription>
-                      Write your blog post content here
+                      {isEditing ? 'Update your blog post content' : 'Write your blog post content here'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -304,7 +367,7 @@ export default function NewPostPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
@@ -348,7 +411,9 @@ export default function NewPostPage() {
 
                     <Button type="submit" className="w-full" disabled={submitting}>
                       <Save className="mr-2 h-4 w-4" />
-                      {submitting ? 'Creating...' : 'Create Post'}
+                      {submitting 
+                        ? (isEditing ? 'Updating...' : 'Creating...') 
+                        : (isEditing ? 'Update Post' : 'Create Post')}
                     </Button>
                   </CardContent>
                 </Card>

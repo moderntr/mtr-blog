@@ -86,7 +86,7 @@ const PostSchema = new mongoose.Schema(
   }
 );
 
-// Create slug from title
+// Pre-save: Generate slug from title
 PostSchema.pre('save', function (next) {
   if (this.isModified('title')) {
     this.slug = slugify(this.title, {
@@ -97,28 +97,28 @@ PostSchema.pre('save', function (next) {
   next();
 });
 
-// Calculate likes count
-PostSchema.virtual('likesCount').get(function () {
-  return this.likes.length;
-});
-
-// Calculate comments count
-PostSchema.virtual('commentsCount').get(function () {
-  return this.comments.length;
-});
-
-// Middleware to update read time based on content length
+// Pre-save: Calculate estimated read time from content length
 PostSchema.pre('save', function (next) {
   if (this.isModified('content')) {
     const wordsPerMinute = 200;
-    const wordCount = this.content.split(/\s+/).length;
+    const wordCount = this.content?.split(/\s+/).length || 0;
     const readTime = Math.ceil(wordCount / wordsPerMinute);
-    this.readTime = readTime < 1 ? 1 : readTime;
+    this.readTime = Math.max(readTime, 1);
   }
   next();
 });
 
-// Index for efficient searching
+// Safe virtual for likes count
+PostSchema.virtual('likesCount').get(function () {
+  return Array.isArray(this.likes) ? this.likes.length : 0;
+});
+
+// Safe virtual for comments count
+PostSchema.virtual('commentsCount').get(function () {
+  return Array.isArray(this.comments) ? this.comments.length : 0;
+});
+
+// Text index for search
 PostSchema.index({
   title: 'text',
   excerpt: 'text',

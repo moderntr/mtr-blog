@@ -36,7 +36,8 @@ const UserSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+      default:
+        'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
     },
     bio: {
       type: String,
@@ -90,7 +91,7 @@ const UserSchema = new mongoose.Schema(
 // Encrypt password using bcrypt
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
 
   // Only hash password if it exists (for Google OAuth users)
@@ -98,7 +99,7 @@ UserSchema.pre('save', async function (next) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
-  
+
   next();
 });
 
@@ -115,15 +116,22 @@ UserSchema.methods.getSignedJwtToken = function () {
 
 // Match user entered password to hashed password in database
 UserSchema.methods.matchPassword = async function (enteredPassword) {
-  if (!this.password) {
-    return false; // No password set (Google OAuth user)
-  }
+  if (!this.password) return false; // No password set (Google OAuth user)
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Virtual field for post count
+// Virtual field: post count
 UserSchema.virtual('postCount').get(function () {
-  return this.posts.length;
+  return Array.isArray(this.posts) ? this.posts.length : 0;
+});
+
+// Optional: virtual fields for comment count and liked post count
+UserSchema.virtual('commentCount').get(function () {
+  return Array.isArray(this.comments) ? this.comments.length : 0;
+});
+
+UserSchema.virtual('likedPostCount').get(function () {
+  return Array.isArray(this.likedPosts) ? this.likedPosts.length : 0;
 });
 
 module.exports = mongoose.model('User', UserSchema);

@@ -10,33 +10,35 @@ export default function Home() {
   return (
     <div className="pt-16">
       {/* Hero Section */}
-      <section className="relative h-[500px] md:h-[600px] overflow-hidden">
+      <section className="relative h-[300px] md:h-[400px] overflow-hidden">
+        {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 to-background/50 z-10" />
+
+        {/* Full Cover Image */}
         <Image
-          src="https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260"
+          src="/banner.png" // Make sure this is the correct path in `public/`
           alt="Blog hero image"
           fill
-          className="object-cover"
           priority
+          className="object-cover"
         />
+
+        {/* Content */}
         <div className="container mx-auto px-4 md:px-6 relative z-20 h-full flex flex-col justify-center">
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
               Insights That Drive E-Commerce Success
             </h1>
-            <p className="text-lg md:text-xl mb-6 text-muted-foreground animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-              Expert advice, industry trends, and success stories to help your online business thrive.
+            <p className="text-base md:text-lg mb-6 text-muted-foreground animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+              Expert advice, industry trends, and success stories to help your
+              online business thrive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-7 duration-700 delay-200">
               <Button size="lg" asChild>
-                <Link href="/latest">
-                  Read Latest Articles
-                </Link>
+                <Link href="/latest">Read Latest Articles</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/categories">
-                  Browse Categories
-                </Link>
+                <Link href="/categories">Browse Categories</Link>
               </Button>
             </div>
           </div>
@@ -44,7 +46,7 @@ export default function Home() {
       </section>
 
       {/* Featured Posts */}
-      <section className="py-16 bg-muted">
+      <section className="py-5 bg-muted">
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-tight mb-8 text-center">
             Featured Articles
@@ -54,14 +56,14 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="py-16">
+      {/* <section className="py-16">
         <div className="container mx-auto px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-tight mb-8 text-center">
             Explore By Category
           </h2>
           <CategoryList />
         </div>
-      </section>
+      </section> */}
 
       {/* Latest Posts */}
       <section className="py-16 bg-muted/50">

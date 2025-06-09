@@ -50,9 +50,7 @@ export const postsAPI = {
   
   deletePost: (id: string) => api.delete(`/posts/${id}`),
   
-  likePost: (id: string) => api.post(`/posts/${id}/like`),
-  
-  unlikePost: (id: string) => api.post(`/posts/${id}/unlike`),
+  toggleLikePost: (id: string) => api.post(`/posts/${id}/toggle-like`),
   
   getFeaturedPosts: () => api.get('/posts/featured'),
 };
@@ -78,9 +76,6 @@ export const commentsAPI = {
     api.get(`/comments/post/${postId}`, { params }),
   
   createComment: (commentData: any) => api.post('/comments', commentData),
-  
-  updateCommentStatus: (id: string, status: string) => 
-    api.put(`/comments/${id}/status`, { status }),
   
   likeComment: (id: string) => api.post(`/comments/${id}/like`),
   
