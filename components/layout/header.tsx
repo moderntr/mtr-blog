@@ -183,7 +183,7 @@ export default function Header() {
         )}
 
         {isOpen && (
-          <div className="md:hidden border-t py-4 animate-in fade-in slide-in-from-top">
+          <div className="md:hidden border-t py-4 animate-in fade-in slide-in-from-top bg-black/80 backdrop-blur-sm">
             <nav className="flex flex-col space-y-1">
               {navLinks.map((link) => (
                 <Link
