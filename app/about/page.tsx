@@ -41,14 +41,19 @@ export default function About() {
           <div className="max-w-xl text-center lg:text-left">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Our Story</h2>
             <p className="text-muted-foreground text-lg mb-4">
-              We started as a small group of marketers, developers, and
-              entrepreneurs with a shared passion for building successful online
-              businesses.
+              Welcome to Modern Trade Market – the leading open marketplace
+              designed to empower vendors and connect them directly with
+              potential customers. Our platform provides a seamless and
+              efficient space where businesses can create their store accounts,
+              list their products, and grow their brand.
             </p>
             <p className="text-muted-foreground text-lg">
-              Now, we’re a growing media brand offering insights and tools that
-              help e-commerce brands scale smart — driven by data, fueled by
-              creativity, and obsessed with impact.
+              Since our inception, we've been driven by a simple goal: to
+              provide a platform where vendors can easily showcase their
+              products, and customers can browse and connect with sellers to
+              make informed purchasing decisions. Whether you're a small vendor
+              looking to make your mark or a large business aiming to scale,
+              Modern Trade Market is the place to be.
             </p>
           </div>
         </div>
@@ -92,7 +97,9 @@ export default function About() {
       {/* Team Section with Horizontal Scroll on Mobile */}
       <section className="py-16">
         <div className="container mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-10">Meet the Team</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-10">
+            Meet the Team
+          </h2>
 
           <div className="relative">
             {/* Horizontal scrollable team list */}
@@ -101,9 +108,9 @@ export default function About() {
               className="flex gap-6 overflow-x-auto sm:grid sm:grid-cols-2 md:grid-cols-4 sm:overflow-x-visible scroll-smooth snap-x snap-mandatory pb-4"
             >
               {[
-                { name: "Jane Doe", role: "Editor-in-Chief", img: "" },
-                { name: "Mark L.", role: "Head of Strategy", img: "" },
-                { name: "Sara Patel", role: "Lead Developer", img: "" },
+                { name: "Kennedy Owino", role: "Director", img: "ken.jpg" },
+                { name: "John Mutave.", role: "CEO", img: "john.jpg" },
+                { name: "Brian Otieno", role: "CTO", img: "brian.jpg" },
                 { name: "Leo Thompson", role: "Growth Specialist", img: "" },
               ].map((member, i) => {
                 const initials = member.name

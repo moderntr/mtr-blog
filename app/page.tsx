@@ -37,9 +37,9 @@ export default function Home() {
               <Button size="lg" asChild>
                 <Link href="/latest">Read Latest Articles</Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              {/* <Button size="lg" variant="outline" asChild>
                 <Link href="/categories">Browse Categories</Link>
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
