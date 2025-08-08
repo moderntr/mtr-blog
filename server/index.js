@@ -41,6 +41,7 @@ const jwtMiddleware = jwt({
     { url: /^\/api\/categories($|\?)/, methods: ['GET'] },
     { url: /^\/api\/categories\/[^\/]+$/, methods: ['GET'] },
     { url: /^\/api\/comments\/post\/[^\/]+($|\?)/, methods: ['GET'] },
+    { url: /^\/api\/sitemap($|\?)/, methods: ['GET'] },
     '/api/health'
   ]
 });
@@ -66,6 +67,7 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/sitemap', require('./routes/sitemap'));
 
 // Global error handler
 app.use((err, req, res, next) => {

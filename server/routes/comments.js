@@ -163,8 +163,6 @@ router.post(
   }
 );
 
-// Removed: PUT /api/comments/:id/status
-
 // @route   PUT /api/comments/:id
 // @desc    Edit a comment
 // @access  Private (Author or Admin)
@@ -253,14 +251,63 @@ router.post('/:id/like', async (req, res) => {
       return res.status(404).json({ message: 'Comment not found' });
     }
 
-    if (comment.likes.includes(req.auth.id)) {
-      return res.status(400).json({ message: 'Comment already liked' });
+    const userId = req.auth.id;
+    const likedIndex = comment.likes.findIndex(like => like.toString() === userId);
+
+    if (likedIndex !== -1) {
+      // User already liked -> unlike
+      comment.likes.splice(likedIndex, 1);
+      await comment.save();
+
+      return res.status(200).json({
+        success: true,
+        action: 'unliked',
+        data: { likesCount: comment.likes.length }
+      });
+    } else {
+      // User hasn't liked yet -> like
+      comment.likes.push(userId);
+      await comment.save();
+
+      return res.status(200).json({
+        success: true,
+        action: 'liked',
+        data: { likesCount: comment.likes.length }
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// @route   PATCH /api/comments/:id/status
+// @desc    Update comment status
+// @access  Private (Admin only)
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const user = await User.findById(req.auth.id);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update comment status' });
     }
 
-    comment.likes.push(req.auth.id);
+    const { status } = req.body;
+    if (!['pending', 'approved', 'rejected', 'spam'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    comment.status = status;
     await comment.save();
 
-    res.status(200).json({ success: true, data: { likesCount: comment.likes.length } });
+    res.status(200).json({
+      success: true,
+      data: comment
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  LayoutDashboard, FileText, Users, Tag, MessageSquare, 
+  LayoutDashboard, FileText, Users, Tag, MessageSquare, Globe,
   Settings, LogOut, ChevronRight, ChevronLeft, Menu, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       title: "Users",
       href: "/admin/users",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "Sitemap",
+      href: "/admin/sitemap",
+      icon: <Globe className="h-5 w-5" />,
     },
     {
       title: "Settings",

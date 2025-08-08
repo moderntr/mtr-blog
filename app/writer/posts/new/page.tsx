@@ -111,8 +111,8 @@ export default function NewPostPage() {
       const currentTags = form.getValues("tags") || [];
       if (!currentTags.includes(tagInput.trim())) {
         form.setValue("tags", [...currentTags, tagInput.trim()]);
+        setTagInput("");
       }
-      setTagInput("");
     }
   };
 

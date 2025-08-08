@@ -9,14 +9,22 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
+import Dropcursor from "@tiptap/extension-dropcursor";
+import Gapcursor from "@tiptap/extension-gapcursor";
+import { useCallback, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   Bold, Italic, Underline as UnderlineIcon, Link as LinkIcon, 
   Image as ImageIcon, List, ListOrdered, Quote, 
   AlignLeft, AlignCenter, AlignRight, AlignJustify, 
-  Heading1, Heading2, Code
+  Heading1, Heading2, Code, Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+import { toast } from "sonner";
+import { ImageUploadDialog } from "./image-upload-dialog";
 
 interface RichTextEditorProps {
   content: string;
@@ -31,10 +39,16 @@ export default function RichTextEditor({
   placeholder = "Write something amazing...",
   className,
 }: RichTextEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
+      Dropcursor,
+      Gapcursor,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -43,6 +57,9 @@ export default function RichTextEditor({
       }),
       Image.configure({
         allowBase64: true,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg my-4'
+        }
       }),
       Placeholder.configure({
         placeholder,
@@ -84,16 +101,59 @@ export default function RichTextEditor({
       .run();
   };
 
-  const addImage = () => {
-    const url = window.prompt("URL");
+  const addImageFromUrl = () => {
+    const url = window.prompt("Enter image URL");
 
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
   };
 
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      editor.chain().focus().setImage({ src: imageUrl }).run();
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [editor]);
+
+  const triggerImageUpload = () => {
+    setImageDialogOpen(true);
+  };
   return (
+  const handleImageSelect = (url: string) => {
+    editor.chain().focus().setImage({ src: url }).run();
+  };
+
     <div className={cn("border rounded-md", className)}>
+      <ImageUploadDialog
+        open={imageDialogOpen}
+        onOpenChange={setImageDialogOpen}
+        onImageSelect={handleImageSelect}
+      />
       <div className="flex flex-wrap gap-1 p-2 border-b bg-muted/50">
         <Button
           variant="ghost"
@@ -227,10 +287,10 @@ export default function RichTextEditor({
         <Button
           variant="ghost"
           size="icon"
-          onClick={addImage}
-          title="Insert Image"
+          onClick={triggerImageUpload}
+          title="Upload Image"
         >
-          <ImageIcon className="h-4 w-4" />
+          <Upload className="h-4 w-4" />
         </Button>
       </div>
 
@@ -277,7 +337,7 @@ export default function RichTextEditor({
 
       <EditorContent 
         editor={editor} 
-        className="prose dark:prose-invert max-w-none p-4 min-h-[300px] focus:outline-none"
+        className="prose dark:prose-invert max-w-none p-4 min-h-[300px] focus:outline-none [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4"
       />
     </div>
   );

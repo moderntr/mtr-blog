@@ -99,4 +99,11 @@ export const usersAPI = {
   deleteUser: (id: string) => api.delete(`/users/${id}`),
 };
 
+// Sitemap API
+export const sitemapAPI = {
+  getSitemapData: () => api.get("/sitemap"),
+  
+  generateSitemap: () => api.post("/sitemap/generate"),
+};
+
 export default api;
