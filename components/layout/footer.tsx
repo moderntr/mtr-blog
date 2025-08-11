@@ -44,11 +44,11 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Mobile Qrcode</h3>
             <ul className="space-y-2">
               <li>
-                <img src="qrcode.jpg" alt="" width={130} height={130} />
+                <img src="/qrcode.jpg" alt="" width={130} height={130} />
               </li>
               <li>
                 <Link rel="stylesheet" href="https://shorturl.at/tHfvv">
-                  <img src="play.png" alt="" width={130} height={130} />
+                  <img src="/play.png" alt="" width={130} height={130} />
                 </Link>
               </li>
             </ul>
