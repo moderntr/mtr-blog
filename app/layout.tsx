@@ -14,14 +14,15 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'E-Commerce Blog | Share Insights and Boost Sales',
   description: 'Discover the latest trends, tips, and insights about our products and industry through our regularly updated blog.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://blogs.moderntrademarket.com/'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://ecommerce-blog.com',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://blogs.moderntrademarket.com/',
     siteName: 'E-Commerce Blog',
     images: [
       {
-        url: 'https://ecommerce-blog.com/og-image.jpg',
+        url: '/banner.png',
         width: 1200,
         height: 630,
         alt: 'E-Commerce Blog',
@@ -33,7 +34,10 @@ export const metadata: Metadata = {
     title: 'E-Commerce Blog | Share Insights and Boost Sales',
     description: 'Discover the latest trends, tips, and insights about our products and industry through our regularly updated blog.',
     creator: '@ecommerceblog',
-    images: ['https://ecommerce-blog.com/twitter-image.jpg'],
+    images: ['/banner.png'],
+  },
+  alternates: {
+    canonical: '/',
   },
 };
 

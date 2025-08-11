@@ -23,7 +23,32 @@ import {
 import { postsAPI, commentsAPI } from "@/lib/api";
 import { toast } from "sonner";
 import Link from "next/link";
+import { generateSEO, generateStructuredData } from "@/lib/seo";
+import { Metadata } from "next";
 
+// Generate metadata for SEO
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${params.slug}`);
+    if (!response.ok) throw new Error('Post not found');
+    
+    const { data: post } = await response.json();
+    
+    return generateSEO({
+      title: post.seo?.metaTitle || post.title,
+      description: post.seo?.metaDescription || post.excerpt,
+      image: post.featuredImage,
+      url: `/blog/${post.slug}`,
+      type: 'article',
+      publishedTime: post.createdAt,
+      modifiedTime: post.updatedAt,
+      authors: [post.author?.name],
+      tags: post.tags,
+    });
+  } catch (error) {
+    return generateSEO({});
+  }
+}
 export default function PostDetailPage() {
   const { slug } = useParams();
   // Define User type with _id property
@@ -287,6 +312,22 @@ export default function PostDetailPage() {
       : "Unknown date";
 
   return (
+    <>
+      {post && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(generateStructuredData({
+              title: post.title,
+              description: post.excerpt,
+              image: post.featuredImage,
+              publishedTime: post.createdAt,
+              modifiedTime: post.updatedAt,
+              author: post.author,
+            })),
+          }}
+        />
+      )}
     <div className="max-w-4xl mx-auto px-4 py-8 mt-20">
       <div className="mb-6">
         <Link href="/">
@@ -379,7 +420,7 @@ export default function PostDetailPage() {
           ) : (
             comments.map((comment) => {
               const userLiked = comment.likes?.includes(user?._id);
-              const isCommentAuthor = user?._id === comment.user?._id;
+              const isCommentAuthor = user?._id === comment.author?._id || user?._id === comment.user?._id;
 
               const createdAtFormatted =
                 comment.createdAt &&
@@ -448,8 +489,7 @@ export default function PostDetailPage() {
                           {comment.likes?.length || 0}
                         </Button>
 
-                        {isCommentAuthor &&
-                          editingCommentId !== comment._id && (
+                        {user && isCommentAuthor && editingCommentId !== comment._id && (
                             <>
                               <Button
                                 variant="outline"
@@ -484,5 +524,6 @@ export default function PostDetailPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }
